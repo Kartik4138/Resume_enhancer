@@ -13,15 +13,9 @@ from app.scoring.formatting_rules import evaluate_formatting
 from app.utils.formatting_analyzer import analyze_formatting
 from app.utils.resume_parser import clean_text, extract_resume_text
 
-
-
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-
-# =========================
-# RESUME UPLOAD
-# =========================
 async def handle_res_upload(
     file,
     user_id: uuid.UUID,
@@ -51,7 +45,6 @@ async def handle_res_upload(
         db.add(resume)
         await db.flush()
 
-    # 🔎 Check if this exact file already exists
     existing = await db.execute(
         select(ResumeVersion).where(
             ResumeVersion.resume_id == resume.id,
@@ -85,9 +78,6 @@ async def handle_res_upload(
     }
 
 
-# =========================
-# BACKGROUND PARSE JOB
-# =========================
 async def parse_resume_job(resume_version_id: str):
     async with AsyncSessionLocal() as db:
         result = await db.execute(
@@ -101,11 +91,9 @@ async def parse_resume_job(resume_version_id: str):
             return
 
         try:
-            # 1️⃣ Extract + clean text
             raw_text = extract_resume_text(resume_version.file_path)
             cleaned_text = clean_text(raw_text)
 
-            # 2️⃣ Formatting analysis
             formatting_stats = analyze_formatting(cleaned_text)
             formatting_violations = evaluate_formatting(formatting_stats)
 
@@ -117,13 +105,11 @@ async def parse_resume_job(resume_version_id: str):
                 "certifications": False,
             }
 
-            # 4️⃣ Skill extraction (still NLP-based)
             skills = extract_resume_skills_nlp(
                 cleaned_text,
                 sections,
             )
 
-            # 5️⃣ Persist parsed data
             resume_version.parsed_data = {
                 "raw_text": raw_text[:5000],
                 "cleaned_text": cleaned_text[:5000],

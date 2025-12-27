@@ -5,7 +5,7 @@ def clamp(value: float, min_v: float, max_v: float) -> float:
 def compute_skill_score(skills_block: dict) -> float:
     """
     skills.match_percent → 0–100
-    Contribution: 30 points
+    Contribution: 45 points
     """
     match_percent = skills_block.get("match_percent", 0)
     match_percent = clamp(match_percent, 0, 100)
@@ -16,7 +16,7 @@ def compute_skill_score(skills_block: dict) -> float:
 def compute_experience_score(exp_block: dict) -> float:
     """
     experience.relevance_score → 0–100
-    Contribution: 25 points
+    Contribution: 30 points
     """
     relevance = exp_block.get("relevance_score", 0)
     relevance = clamp(relevance, 0, 100)
@@ -27,7 +27,7 @@ def compute_experience_score(exp_block: dict) -> float:
 def compute_keyword_score(keyword_block: dict) -> float:
     """
     Keyword strength based on matched/weak/missing
-    Contribution: 20 points
+    Contribution: 15 points
     """
     matched = len(keyword_block.get("matched", []))
     weak = len(keyword_block.get("weak", []))
@@ -44,7 +44,7 @@ def compute_keyword_score(keyword_block: dict) -> float:
 def compute_section_score(section_block: dict) -> float:
     """
     Required sections: skills, experience, education
-    Contribution: 15 points
+    Contribution: 5 points
     """
     required = ["skills", "experience", "education"]
     present = sum(1 for s in required if section_block.get(s))
@@ -55,25 +55,23 @@ def compute_section_score(section_block: dict) -> float:
 def compute_formatting_score(formatting_block: dict) -> float:
     """
     Formatting score provided by Gemini (0-100)
-    Contribution: 10 points
+    Contribution: 5 points
     """
     score = formatting_block.get("score", 0)
     score = clamp(score, 0, 100)
 
-    # Scale 0-100 down to 0-10
     return round((score / 100) * 5, 2)
 
 
 def aggregate_ats_score(
     gemini_result: dict,
-    formatting: dict # This parameter is now redundant if Gemini provides everything
+    formatting: dict 
 ) -> dict:
     skill_score = compute_skill_score(gemini_result["skills"])
     experience_score = compute_experience_score(gemini_result["experience"])
     keyword_score = compute_keyword_score(gemini_result["keywords"])
     section_score = compute_section_score(gemini_result["sections"])
     
-    # 🔟 Now using the block FROM gemini_result
     formatting_score = compute_formatting_score(gemini_result.get("formatting", {}))
 
     final_score = round(

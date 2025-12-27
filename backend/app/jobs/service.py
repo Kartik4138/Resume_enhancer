@@ -15,7 +15,6 @@ async def analyze_job_description(
 ):
     content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-    # 🔍 Check if THIS USER already analyzed this JD
     result = await db.execute(
         select(JobDescription)
         .where(

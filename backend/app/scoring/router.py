@@ -21,15 +21,11 @@ from app.cache.score_cache import make_score_key, get_cached_score, set_cached_s
 
 router = APIRouter(prefix="/ats", tags=["ATS"])
 
-# -------------------------------------------------------------------------
-# 1. SCORE RESUME ENDPOINT (The Core Logic)
-# -------------------------------------------------------------------------
 @router.post("/score")
 async def score_resume(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
-    # 1️⃣ Fetch Latest PARSED resume for this user [cite: 13, 41]
     res_query = await db.execute(
         select(ResumeVersion)
         .join(Resume)
@@ -45,7 +41,6 @@ async def score_resume(
     if not resume:
         raise HTTPException(404, "No parsed resume found.")
 
-    # 2️⃣ Fetch Latest analyzed JD for THIS user [cite: 13, 17]
     jd_query = await db.execute(
         select(JobDescription)
         .where(
@@ -60,7 +55,6 @@ async def score_resume(
     if not jd:
         raise HTTPException(404, "No analyzed job description found.")
 
-    # 3️⃣ Cache Check (Using content hashes to prevent collisions)
     resume_text = resume.parsed_data.get("cleaned_text", "")
     jd_text = jd.content
 
@@ -74,7 +68,6 @@ async def score_resume(
     if cached:
         return {**cached, "cached": True}
 
-    # 4️⃣ Gemini full analysis (Prompt now includes formatting analysis) [cite: 18, 41]
     try:
         gemini_result = gemini_full_ats_analysis(
             resume_text=resume_text,
@@ -83,10 +76,9 @@ async def score_resume(
     except Exception as e:
         raise HTTPException(500, f"AI Analysis failed: {str(e)}")
 
-    # 5️⃣ Updated Scoring: Formatting now comes FROM gemini_result 
     final = aggregate_ats_score(
         gemini_result=gemini_result,
-        formatting={}  # Local formatting data is now bypassed in favor of AI analysis
+        formatting={}
     )
 
     payload = {
@@ -98,7 +90,6 @@ async def score_resume(
         "suggestions": gemini_result["suggestions"]
     }
 
-    # 6️⃣ Atomic Upsert (Handles race conditions) [cite: 15, 17]
     stmt = insert(AnalysisResult).values(
         resume_version_id=resume.id,
         job_description_id=jd.id,
@@ -119,7 +110,6 @@ async def score_resume(
     await db.execute(upsert_stmt)
     await db.commit()
 
-    # 7️⃣ Build Response
     response = {
         **final,
         **payload,
@@ -132,9 +122,6 @@ async def score_resume(
     return response
 
 
-# -------------------------------------------------------------------------
-# 2. FETCH ANALYZED FILE (The exact file used for the score)
-# -------------------------------------------------------------------------
 @router.get("/latest-analyzed-file")
 async def get_latest_analyzed_resume(
     current_user: User = Depends(get_current_user),
@@ -167,9 +154,6 @@ async def get_latest_analyzed_resume(
         filename=f"analyzed_resume_{current_user.id}.pdf"
     )
 
-# -------------------------------------------------------------------------
-# 3. VERIFY LATEST UPLOAD (Quick check after upload)
-# -------------------------------------------------------------------------
 @router.get("/latest/verify")
 async def verify_latest_upload(
     current_user: User = Depends(get_current_user),

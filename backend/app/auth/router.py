@@ -22,10 +22,6 @@ from app.utils.email import send_otp_email
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-
-# --------------------------------------------------
-# REQUEST OTP (SIGNUP + LOGIN)
-# --------------------------------------------------
 @router.post("/request-otp")
 async def request_otp(
     payload: EmailInput,
@@ -53,10 +49,6 @@ async def request_otp(
 
     return {"message": "OTP sent to email. Previous codes have been invalidated."}
 
-
-# --------------------------------------------------
-# VERIFY OTP (LOGIN / AUTO-SIGNUP)
-# --------------------------------------------------
 @router.post("/verify-otp")
 async def verify_otp(
     payload: OTPVerifyInput,
@@ -107,10 +99,6 @@ async def verify_otp(
         "token_type": "bearer"
     }
 
-
-# --------------------------------------------------
-# REFRESH TOKEN (ROTATION)
-# --------------------------------------------------
 @router.post("/refresh")
 async def refresh(
     refresh_token: str,
@@ -164,10 +152,6 @@ async def refresh(
         "refresh_token": new_refresh
     }
 
-
-# --------------------------------------------------
-# LOGOUT
-# --------------------------------------------------
 @router.post("/logout")
 async def logout(
     current_user: User = Depends(get_current_user),

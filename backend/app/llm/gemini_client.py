@@ -2,8 +2,6 @@ import os
 from google import genai
 from google.genai import types
 
-
-# 🚨 Fail fast if key missing
 API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise RuntimeError("GEMINI_API_KEY not set in environment")

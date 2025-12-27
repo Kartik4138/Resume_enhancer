@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.db.session import engine
 from app.db.base import Base
@@ -17,7 +19,6 @@ def create_app() -> FastAPI:
         version="1.0.0"
     )
 
-    # CORS (adjust origins later for prod)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -38,18 +39,40 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-# -----------------------------------------
-# DATABASE INIT (RUN ON STARTUP)
-# -----------------------------------------
 @app.on_event("startup")
 async def init_db():
+    """
+    1. Connects to the default 'postgres' database to check if our DB exists.
+    2. Creates the DB if missing.
+    3. Creates all tables within that DB.
+    """
+    target_db_name = engine.url.database
+    system_url = engine.url.set(database="postgres")
+
+    temp_engine = create_async_engine(system_url, isolation_level="AUTOCOMMIT")
+
+    async with temp_engine.connect() as conn:
+        # Check if database exists
+        result = await conn.execute(
+            text(f"SELECT 1 FROM pg_database WHERE datname = '{target_db_name}'")
+        )
+        exists = result.scalar()
+
+        if not exists:
+            print(f" Database '{target_db_name}' does not exist. Creating it now...")
+            await conn.execute(text(f'CREATE DATABASE "{target_db_name}"'))
+            print(f" Database '{target_db_name}' created successfully!")
+        else:
+            print(f" Database '{target_db_name}' already exists.")
+
+    await temp_engine.dispose()
+
+    print(" Creating tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    print(" Tables created successfully.")
 
 
-# -----------------------------------------
-# HEALTH CHECK
-# -----------------------------------------
 @app.get("/health")
 async def health():
     return {"status": "ok"}

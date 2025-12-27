@@ -4,14 +4,6 @@ from app.cache.redis import redis_client
 
 CACHE_TTL = 3600
 
-import json
-import hashlib
-from app.cache.redis import redis_client
-
-CACHE_TTL = 3600
-
-import hashlib
-
 def generate_content_hash(text: str) -> str:
     return hashlib.md5(text.encode('utf-8')).hexdigest()
 
@@ -26,7 +18,6 @@ def get_cached_score(key: str):
     return json.loads(data) if data else None
 
 def set_cached_score(key: str, value: dict):
-    # 🔟 FIXED: Added default=str to handle UUIDs and datetimes
     redis_client.setex(
         key,
         CACHE_TTL,

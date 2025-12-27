@@ -19,9 +19,6 @@ async def upload_resume(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session)
 ):
-    # --- CLEANUP LOGIC START ---
-    # 1. Find all existing resume versions for this user to avoid clutter
-    # We join with Resume to ensure we only touch this specific user's files
     existing_versions_query = await db.execute(
         select(ResumeVersion)
         .join(Resume)
@@ -29,7 +26,6 @@ async def upload_resume(
     )
     old_versions = existing_versions_query.scalars().all()
 
-    # 2. Delete physical files from disk and records from DB
     for old in old_versions:
         if old.file_path and os.path.exists(old.file_path):
             try:
@@ -37,17 +33,13 @@ async def upload_resume(
             except Exception as e:
                 print(f"Error deleting file {old.file_path}: {e}")
         
-        # Also delete associated analysis results to maintain referential integrity
         await db.execute(
             delete(AnalysisResult).where(AnalysisResult.resume_version_id == old.id)
         )
         await db.delete(old)
     
-    # Commit deletions before processing the new upload
     await db.commit()
-    # --- CLEANUP LOGIC END ---
 
-    # 3. Process the new upload
     result = await handle_res_upload(
         file=file,
         user_id=current_user.id,
@@ -70,14 +62,11 @@ async def upload_resume(
     
     return result
 
-# ... (Rest of your history, latest-analyzed, and verify endpoints remain the same)
-
 @router.get("/history", response_model=ResumeHistoryResponse)
 async def resume_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session)
 ):
-    # 1️⃣ Check resume ownership
     res = await db.execute(
         select(Resume)
         .where(
@@ -89,7 +78,6 @@ async def resume_history(
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
 
-    # 2️⃣ Fetch resume versions
     versions_res = await db.execute(
         select(ResumeVersion)
         .where(ResumeVersion.resume_id == resume.id)
@@ -100,7 +88,6 @@ async def resume_history(
     history = []
 
     for version in versions:
-        # 3️⃣ Fetch ATS analyses for this version
         analysis_res = await db.execute(
             select(AnalysisResult)
             .where(AnalysisResult.resume_version_id == version.id)
@@ -133,8 +120,6 @@ async def get_latest_analyzed_resume(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session)
 ):
-    # 1. Find the latest analysis result for this user
-    # We join through ResumeVersion and Resume to verify ownership
     query = (
         select(ResumeVersion.file_path, ResumeVersion.file_hash)
         .join(AnalysisResult, AnalysisResult.resume_version_id == ResumeVersion.id)
@@ -166,7 +151,6 @@ async def verify_latest_upload(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session)
 ):
-    # Query the latest version by joining Resume and ResumeVersion 
     query = (
         select(ResumeVersion.file_path)
         .join(Resume, ResumeVersion.resume_id == Resume.id)
@@ -184,7 +168,6 @@ async def verify_latest_upload(
     if not os.path.exists(row.file_path):
         raise HTTPException(status_code=404, detail="File path exists in DB but file is missing from storage.")
 
-    # Return the file as a PDF so the browser/frontend can render it for verification [cite: 13]
     return FileResponse(
         path=row.file_path,
         media_type='application/pdf',
