@@ -36,6 +36,13 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
+@app.on_event("startup")
+async def init_tables():
+    print("🔄 Checking for tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("✅ Tables check/creation complete.")
+    
 @app.get("/health")
 async def health():
     return {"status": "ok"}
