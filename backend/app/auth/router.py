@@ -116,22 +116,21 @@ async def refresh(
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     user_id = payload["sub"]
+    refresh_hash = hash_otp(refresh_token)
 
     res = await db.execute(
-        select(RefreshToken)
-        .where(
+        select(RefreshToken).where(
             RefreshToken.user_id == user_id,
+            RefreshToken.token_hash == refresh_hash,
             RefreshToken.revoked == False
         )
     )
-    tokens = res.scalars().all()
+    token = res.scalar_one_or_none()
 
-    if not any(verify_otp(refresh_token, t.token_hash) for t in tokens):
+    if not token:
         raise HTTPException(status_code=401, detail="Refresh token revoked")
 
-    # revoke old tokens
-    for t in tokens:
-        t.revoked = True
+    token.revoked = True
 
     new_access = create_access_token({"sub": str(user_id)})
     new_refresh = create_refresh_token({"sub": str(user_id)})
@@ -151,6 +150,7 @@ async def refresh(
         "access_token": new_access,
         "refresh_token": new_refresh
     }
+
 
 @router.post("/logout")
 async def logout(
