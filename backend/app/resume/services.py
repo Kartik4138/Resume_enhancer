@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import hashlib
 import uuid
 from pathlib import Path
@@ -66,6 +67,7 @@ async def handle_res_upload(
         file_path=str(file_path),
         file_hash=file_hash,
         status="PENDING",
+        expires_at=datetime.now(timezone.utc) + timedelta(days=1)
     )
 
     db.add(resume_version)

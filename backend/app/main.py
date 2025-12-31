@@ -9,6 +9,9 @@ from app.resume.routers import router as resume_router
 from app.jobs.router import router as jobs_router
 from app.scoring.router import router as scoring_router
 
+import asyncio
+from app.maintenance.scheduler import cleanup_loop
+
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -38,10 +41,13 @@ app = create_app()
 
 @app.on_event("startup")
 async def init_tables():
-    print("🔄 Checking for tables...")
+    print("Checking for tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("✅ Tables check/creation complete.")
+    print("Tables check/creation complete.")
+
+    asyncio.create_task(cleanup_loop())
+    print("Cleanup scheduler started.")
     
 @app.get("/health")
 async def health():

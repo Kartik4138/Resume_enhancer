@@ -52,15 +52,14 @@ api.interceptors.response.use(
                 // Spec says: "Use refresh token to obtain new access token."
                 // Let's try sending it as a bearer token in this specific request
 
-                const response = await axios.post('http://localhost:8000/auth/refresh', {}, {
-                    headers: {
-                        Authorization: `Bearer ${refreshToken}`
-                    }
+                const response = await axios.post(`http://localhost:8000/auth/refresh`, null, {
+                    params: { refresh_token: refreshToken }
                 });
 
-                const { access_token } = response.data;
+                const { access_token, refresh_token: new_refresh_token } = response.data;
 
                 localStorage.setItem('access_token', access_token);
+                localStorage.setItem('refresh_token', new_refresh_token);
 
                 // Retry original request with new token
                 originalRequest.headers.Authorization = `Bearer ${access_token}`;
