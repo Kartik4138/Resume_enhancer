@@ -12,6 +12,7 @@ from app.scoring.router import router as scoring_router
 import asyncio
 from app.maintenance.scheduler import cleanup_loop
 
+from fastapi.middleware.cors import CORSMiddleware
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -21,11 +22,14 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",              # local dev
+        "http://resume-enhancer-frontend.s3-website-ap-south-1.amazonaws.com"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
     )
 
     # Routers
