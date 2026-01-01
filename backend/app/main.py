@@ -25,7 +25,7 @@ def create_app() -> FastAPI:
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",              # local dev
-        "http://resume-enhancer-frontend.s3-website-ap-south-1.amazonaws.com"
+        "http://resume-enhancer-frontend.s3-website.ap-south-1.amazonaws.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
