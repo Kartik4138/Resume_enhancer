@@ -6,6 +6,19 @@ It uses **Google Gemini 1.5 Flash** to analyze PDF resumes against Job Descripti
 
 ---
 
+## 🎥 Demo
+
+▶️ **Project Walkthrough & Live Demo**  
+https://youtu.be/oN2a0xmrO1g
+
+This demo covers:
+- Resume upload & JD analysis
+- ATS scoring breakdown
+- Keyword gap detection
+- End-to-end cloud deployment
+
+---
+
 ## 🚀 Key Features
 
 * **📄 AI Resume Parsing:** Extracts complex text and structure from PDF resumes using Gemini's 1M token context window.
@@ -13,7 +26,8 @@ It uses **Google Gemini 1.5 Flash** to analyze PDF resumes against Job Descripti
     * **45% Hard Skills** (Tech stack match)
     * **30% Experience** (Role relevance & seniority)
     * **15% Keywords** (ATS terminology)
-    * **10% Formatting** (Readability check)
+    * **5% Formatting** (Readability check)
+    * **5% Section** (Appropriate section check)
 * **⚡ Intelligent Caching:** Implements **Redis** with **MD5 Content Hashing**. Re-analyzing the same file content costs 0 API credits and returns instant results.
 * **🔐 Secure Authentication:** Passwordless login using **Email OTP** (One-Time Password) and JWT sessions.
 * **🔄 Version Control:** Stores multiple versions of resumes and analysis history for every user.
