@@ -9,7 +9,7 @@ It uses **Google Gemini 1.5 Flash** to analyze PDF resumes against Job Descripti
 ## 🎥 Demo
 
 ▶️ **Project Walkthrough & Live Demo**  
-[![Project Demo](https://img.youtube.com/vi/cUkibsHdCyM/0.jpg)](https://youtu.be/oN2a0xmrO1g)
+[![Project Demo](https://i9.ytimg.com/vi_webp/oN2a0xmrO1g/mqdefault.webp?sqp=CPDZ3coG&rs=AOn4CLCJyhAaqCtjZSPO9nkjTNNmYxnKQQ)](https://youtu.be/oN2a0xmrO1g)
 
 
 This demo covers:
