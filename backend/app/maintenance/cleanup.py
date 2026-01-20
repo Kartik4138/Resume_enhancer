@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +18,7 @@ ANALYSIS_RETENTION_DAYS = 30
 JD_RETENTION_DAYS = 30
 
 async def run_cleanup(db: AsyncSession):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     try:
         await cleanup_expired_otps(db, now)
