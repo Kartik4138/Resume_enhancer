@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.model import JobDescription
 from app.jobs.jd_skill_pipeline import extract_jd_skills
 
-
 async def analyze_job_description(
     content: str,
     user_id: UUID,

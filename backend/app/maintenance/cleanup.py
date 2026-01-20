@@ -20,13 +20,20 @@ JD_RETENTION_DAYS = 30
 async def run_cleanup(db: AsyncSession):
     now = datetime.utcnow()
 
-    await cleanup_expired_otps(db, now)
-    await cleanup_refresh_tokens(db, now)
-    await cleanup_expired_resume_files(db, now)
-    await cleanup_old_analysis_results(db, now)
-    await cleanup_old_job_descriptions(db, now)
+    try:
+        await cleanup_expired_otps(db, now)
+        await cleanup_refresh_tokens(db, now)
+        await cleanup_expired_resume_files(db, now)
+        await cleanup_old_analysis_results(db, now)
+        await cleanup_old_job_descriptions(db, now)
 
-    await db.commit()
+        await db.commit()
+
+    except Exception:
+        await db.rollback()
+        import logging
+        logging.exception("[CLEANUP] Cleanup task failed safely")
+
 
 async def cleanup_expired_otps(db: AsyncSession, now: datetime):
     await db.execute(
@@ -59,7 +66,13 @@ async def cleanup_expired_resume_files(db: AsyncSession, now: datetime):
             except Exception as e:
                 print(f"[CLEANUP] Failed to delete file {version.file_path}: {e}")
 
-        version.file_path = None
+    await db.execute(
+        delete(ResumeVersion).where(
+            ResumeVersion.expires_at.isnot(None),
+            ResumeVersion.expires_at < now
+        )
+    )
+
 
 
 async def cleanup_old_analysis_results(db: AsyncSession, now: datetime):

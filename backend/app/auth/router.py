@@ -19,7 +19,6 @@ from app.auth.deps import get_current_user
 from app.auth.schema import EmailInput, OTPVerifyInput
 from app.utils.email import send_otp_email
 
-
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/request-otp")

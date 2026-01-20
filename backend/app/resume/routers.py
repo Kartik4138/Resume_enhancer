@@ -26,6 +26,19 @@ async def upload_resume(
     )
     old_versions = existing_versions_query.scalars().all()
 
+    if not file or not file.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="Please upload a resume file"
+        )   
+
+    if file.content_type not in ["application/pdf"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF resumes are supported"
+        )
+
+
     for old in old_versions:
         if old.file_path and os.path.exists(old.file_path):
             try:
