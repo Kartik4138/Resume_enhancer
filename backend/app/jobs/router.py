@@ -17,7 +17,7 @@ async def analyze_jd(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session)
 ):
-    if not payload or not payload.strip():
+    if not payload:
         raise HTTPException(
             status_code=400,
             detail="Please enter a job description"
